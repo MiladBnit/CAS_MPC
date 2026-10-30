@@ -1,0 +1,52 @@
+# Defaults of the filters, the SMPC and the closed loop. The case study (config/bioreactor.yaml) is loaded
+# on top and sets most of them; the remaining defaults below apply to it unchanged.
+
+# Filter (RBSGD); normalized units
+filter:
+  N: 10                      # particles
+  M: 1                       # SVGD iterations per sample
+  score: marginal            # marginal: eq:score; ekf: EKF-guided score K_theta e; ekf_svgd: two-stage filter
+  prior: particles           # score marginal: Gaussian prior fitted to the particles (eq:score) | none
+  score_window: 1            # score marginal: EKF window k of the likelihood of y_t (1 = eq:score)
+  Q_theta: 1.0e-6            # random-walk variance of theta in the augmented EKF (scores ekf, ekf_svgd)
+  alpha: 1.0                 # weight of the repulsion term in eq:svgd-dir
+  scale_h: 1.0               # scale of the median-heuristic bandwidths
+  optimizer: sgd             # sgd: plain step eq:svgd-step; adam: Adam on the SVGD direction;
+                             # fisher: natural-gradient step (Gauss-Newton Fisher + prior precision);
+                             # svn: Stein variational Newton step (that curvature averaged by the kernel)
+  fisher_beta1: 0.9          # optimizer fisher: moving average of the SVGD direction
+  fisher_beta2: 0.999        # optimizer fisher: moving average of the curvature
+  fisher_damping: 1.0e-3     # optimizers fisher, svn: damping of the solve
+  fisher_max_step: null      # optimizer fisher: cap on the norm of the solve (null: none)
+  epsilon: 3.0e-4            # step size (sgd, svn) or learning rate (adam)
+  omega: 0.1                 # weight of k_theta in k_omega
+  lambda_Sigma: 1.0e-5       # Sigma_{t-1} = C + lambda_Sigma I
+  sigma_init: 0.01           # theta^(i) ~ N(theta_0, sigma_init^2 I)
+  Q_scale: 10.0              # Q = Q_scale x the plant's process noise (when no Q_model is given)
+  R_scale: 1.0               # R = R_scale x the plant's measurement noise (when no R_model is given)
+  L_Phi: null                # feature horizon of the control-aware kernel (null: the MPC horizon L)
+  h_floor: 1.0e-8            # bandwidth floor
+
+# RBPF baseline
+rbpf:
+  N: 50                      # particles
+  sigma_rw: 1.0e-3           # random-walk std of the parameters
+  ess_frac: 0.5              # resample when the effective sample size < ess_frac N
+
+# Scenario SMPC (eq:smpc); normalized units
+mpc:
+  L: 25                      # horizon (samples)
+  W_y: 1.0
+  W_u: 0.1
+  delta: 0.05
+  s0: 1.0e-3                 # floor of the margin spreads (eq:margins)
+  rho_1: 1000.0              # slack penalties, linear and quadratic
+  rho_2: 1000.0
+  ipopt:
+    tol: 1.0e-5
+    acceptable_tol: 1.0e-3
+
+# Closed loop
+closed_loop:
+  seed_offset: 2000          # run seed s uses the random seed seed_offset + s
+  methods: [ce, param, ca, rbpf]

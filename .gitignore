@@ -1,0 +1,17 @@
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+results/*
+!results/bioreactor_mc_corridor_100/
+results/bioreactor_mc_corridor_100/*
+!results/bioreactor_mc_corridor_100/runs.csv
+!results/bioreactor_mc_corridor_100/config.yaml
+paper/figures/
+paper/*.aux
+paper/*.log
+paper/*.pdf
+paper/*.bbl
+paper/*.blg
+paper/*.out

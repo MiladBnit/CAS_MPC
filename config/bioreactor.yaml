@@ -1,0 +1,119 @@
+# Bioreactor benchmark (src/carbsgd/bioreactor.py): the configuration behind every result of the case
+# study, loaded on top of default.yaml with load_config(CONFIG_DIR / "bioreactor.yaml").
+# Units: g/L, h, 1/h. The notebooks (notebooks/run_bioreactor.ipynb, notebooks/montecarlo_bioreactor.ipynb)
+# use it unchanged.
+
+case: bioreactor
+
+bio:
+  # ---- true plant: Haldane and product-inhibited growth, scaled by the mixing efficiency eta(t)
+  mu_max: 0.8                # maximum specific growth rate (1/h); residence time ~6.6 h at the 0.30 reference,
+                             # so an error in mu shows in the states within the 10 h horizon
+  Ks: 0.1                    # half-saturation constant (g/L)
+  Ki: 3.0                    # substrate-inhibition constant (g/L): growth peaks at S* = sqrt(Ks Ki) = 0.55; the
+                             # plant runs at S ~ 4.1-4.5, above S*, where raising D raises S and lowers mu (washout)
+  Yxs: 0.5                   # biomass yield on substrate
+  Ypx: 0.6                   # growth-associated product yield
+  Sf: 5.0                    # feed substrate concentration (g/L)
+  Pmax: 1.0                  # product concentration that stops growth (g/L)
+  beta: 0.05                 # non-growth-associated product formation (1/h)
+  kdp: 0.02                  # product-induced biomass death (L/(g h))
+  t_s: 2.0                   # sampling time (h)
+  n_sub: 5                   # RK4 substeps per sample of the true plant
+  # mixing efficiency: eta(t) = eta_start + (eta_end - eta_start) / (1 + exp(-(t - eta_center) / eta_width))
+  eta_start: 1.0
+  eta_end: 0.7
+  eta_center: 96.0           # h: eta falls during the middle reference segment
+  eta_width: 6.0             # h
+  eta_wobble_std: 0.0        # optional AR(1) wobble around the sigmoid (0: none)
+  eta_wobble_tau: 2.0        # its time constant (h)
+  eta_seed: 0
+  eta_min: 0.05              # model.structure eta only: box eta in [eta_min, 1]
+  eta_prior: 0.95            # model.structure eta only: prior mean of eta
+  # ---- constraints and input bounds
+  X_min: 0.32                # chance constraint X >= X_min (washout side), probability delta
+  X_max: 0.50                # chance constraint X <= X_max (oxygen-transfer capacity); null: X_min only
+  u_min: 0.01                # dilution-rate bounds (1/h)
+  u_max: 0.25
+  # ---- noise of the true plant
+  Q_true: [2.0e-6, 2.0e-6, 2.0e-6]   # process-noise variances per sample (X, S, P), (g/L)^2: 1e-6 per hour
+  R_true: 1.0e-4             # measurement-noise variance of P, (g/L)^2 (std 0.01 g/L)
+  # ---- model
+  norm:                      # normalized coordinates x = (x_p - mu_x) / Lambda_x: centres and scales of the
+    mu_x: [0.42, 4.15, 0.45]   # operating ranges X 0.3-0.55, S 3.8-4.4, P 0.25-0.65 ...
+    Lambda_x: [0.1, 0.2, 0.2]
+    mu_u: 0.16                 # ... and D 0.1-0.22
+    Lambda_u: 0.05
+  model:
+    structure: nn            # nn: growth rate mu(S, P) learned by a network; eta: the physics with unknown eta
+    integrator: rk4          # one RK4 step per sample
+  nn:
+    n_hidden: 8              # mu = mu_scale softplus(NN(S, P; theta)): one tanh layer of 8 units, 33 weights
+    n_layers: 1
+    mu_scale: 0.2
+  laws:                      # inhibition laws d mu/dS <= 0, d mu/dP <= 0 on an n_S x n_P grid, plus two moving
+    S_range: [3.5, 5.0]      # points (the state estimate and the end of the predicted trajectory)
+    P_range: [0.1, 0.8]
+    n_S: 4
+    n_P: 4
+  mu_ref_state: [0.42, 4.15, 0.45]   # state at which the learned growth rate is recorded during a run
+  pretrain:                  # optional offline fit of the network at full mixing (X, S, P assayed)
+    enabled: false           # false: untrained network, started at the initial steady growth rate, learned online
+    seed: 0
+    n_steps: 600
+    hold_min: 10
+    hold_max: 40
+    D_lo: 0.03
+    D_hi: 0.22
+    noise_std: 0.01          # relative assay noise
+    lr: 1.0e-2
+    adam_iters: 3000
+    lbfgs_iters: 300
+    window: 20
+    law_penalty: 100.0
+    weight_decay: 1.0e-6
+  P0: [0.05, 0.05, 0.05]     # initial state covariance (normalized)
+
+filter:                      # RBSGD ("param", "ca"; "ce" uses the "ca" filter)
+  N: 10                      # particles
+  score: marginal            # eq:score; ekf_svgd: the two-stage RBEKFSVGD filter (needs lr_ekf > 0)
+  optimizer: svn             # Stein variational Newton step (curvature averaged by the kernel);
+                             # fisher: per-particle Fisher-Adam step
+  epsilon: 1.0               # step size (svn: 1 is the full Bayesian update for a model linear in theta)
+  M: 1                       # SVN iterations per sample
+  sigma_init: 0.05           # model.structure eta only: initial spread of eta
+  sigma_init_nn: 0.1         # initial spread of the network weights
+  lambda_Sigma: 1.0e-2       # particle prior Sigma = C + lambda_Sigma I (acts as a random walk of the weights)
+  omega: 1.0                 # ca: k_omega = k_Phi + omega k_theta (eq:kernels)
+  alpha: 1.0                 # weight of the repulsion term in eq:svgd-dir
+  scale_h: 1.0               # bandwidth scales (x the median heuristic): k_theta in ca's omega term,
+  scale_h_param: 1.0         # the param kernel k_theta,
+  scale_h_phi: 0.02          # and k_Phi (ca's prediction-space term)
+  Q_scale: 1.0               # used only when Q_model, R_model are null: the plant's noise x these scales
+  R_scale: 1.0
+  Q_model: [2.0e-6, 2.0e-6, 2.0e-6]   # process noise assumed by the filters and the SMPC, per sample (X, S, P)
+  R_model: 1.0e-4            # measurement noise assumed for P (both equal to the plant's)
+  constrained: true          # nn: the inhibition laws (MDMM in the Stein filters, rejection in RBPF);
+                             # eta: box on eta (ADMM in the Stein filters, clipping in RBPF)
+  mdmm_rho: 100.0            # MDMM penalty
+  mdmm_eta: 100.0            # MDMM multiplier step
+  Q_theta: 3.0e-3            # score ekf_svgd only: random walk of eta in the augmented EKF
+  Q_theta_nn: 3.0e-3         # score ekf_svgd only: random walk of each network weight
+  lr_ekf: 1.0                # score ekf_svgd only: warm-start step
+
+rbpf:
+  N: 10                      # particles
+  sigma_rw: 0.02             # model.structure eta only: random-walk std of eta per sample
+  sigma_rw_nn: 0.05          # random-walk std of each network weight per sample
+
+mpc:
+  L: 5                       # horizon (samples): 10 h
+  W_y: 1.0                   # tracking weight
+  W_u: 0.0                   # weight of the input moves
+  delta: 0.01                # violation probability allowed per constraint and stage
+
+closed_loop:
+  reference: [[0.45, 24], [0.40, 48], [0.30, 24]]   # reference of P: [value (g/L), samples]: 48 h, 96 h, 48 h.
+                             # 0.45 drives X towards X_max at full mixing, 0.40 spans the drop of eta,
+                             # 0.30 drives X towards X_min after it
+  methods: [ce, param, ca, rbpf]

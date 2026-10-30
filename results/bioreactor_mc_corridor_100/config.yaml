@@ -1,0 +1,146 @@
+filter:
+  N: 10
+  M: 1
+  score: marginal
+  prior: particles
+  score_window: 1
+  Q_theta: 0.003
+  alpha: 1.0
+  scale_h: 1.0
+  optimizer: svn
+  fisher_beta1: 0.9
+  fisher_beta2: 0.999
+  fisher_damping: 0.001
+  fisher_max_step: null
+  epsilon: 1.0
+  omega: 1.0
+  lambda_Sigma: 0.01
+  sigma_init: 0.05
+  Q_scale: 1.0
+  R_scale: 1.0
+  L_Phi: null
+  h_floor: 1.0e-08
+  sigma_init_nn: 0.1
+  scale_h_param: 1.0
+  scale_h_phi: 0.02
+  Q_model:
+  - 2.0e-06
+  - 2.0e-06
+  - 2.0e-06
+  R_model: 0.0001
+  constrained: true
+  mdmm_rho: 100.0
+  mdmm_eta: 100.0
+  Q_theta_nn: 0.003
+  lr_ekf: 1.0
+rbpf:
+  N: 10
+  sigma_rw: 0.02
+  ess_frac: 0.5
+  sigma_rw_nn: 0.05
+mpc:
+  L: 5
+  W_y: 1.0
+  W_u: 0.0
+  delta: 0.01
+  s0: 0.001
+  rho_1: 1000.0
+  rho_2: 1000.0
+  ipopt:
+    tol: 1.0e-05
+    acceptable_tol: 0.001
+closed_loop:
+  seed_offset: 2000
+  methods:
+  - ce
+  - param
+  - ca
+  - rbpf
+  reference:
+  - - 0.45
+    - 24
+  - - 0.4
+    - 48
+  - - 0.3
+    - 24
+case: bioreactor
+bio:
+  mu_max: 0.8
+  Ks: 0.1
+  Ki: 3.0
+  Yxs: 0.5
+  Ypx: 0.6
+  Sf: 5.0
+  Pmax: 1.0
+  beta: 0.05
+  kdp: 0.02
+  t_s: 2.0
+  n_sub: 5
+  eta_start: 1.0
+  eta_end: 0.7
+  eta_center: 96.0
+  eta_width: 6.0
+  eta_wobble_std: 0.0
+  eta_wobble_tau: 2.0
+  eta_seed: 0
+  eta_min: 0.05
+  eta_prior: 0.95
+  X_min: 0.32
+  X_max: 0.5
+  u_min: 0.01
+  u_max: 0.25
+  Q_true:
+  - 2.0e-06
+  - 2.0e-06
+  - 2.0e-06
+  R_true: 0.0001
+  norm:
+    mu_x:
+    - 0.42
+    - 4.15
+    - 0.45
+    Lambda_x:
+    - 0.1
+    - 0.2
+    - 0.2
+    mu_u: 0.16
+    Lambda_u: 0.05
+  model:
+    structure: nn
+    integrator: rk4
+  nn:
+    n_hidden: 8
+    n_layers: 1
+    mu_scale: 0.2
+  laws:
+    S_range:
+    - 3.5
+    - 5.0
+    P_range:
+    - 0.1
+    - 0.8
+    n_S: 4
+    n_P: 4
+  mu_ref_state:
+  - 0.42
+  - 4.15
+  - 0.45
+  pretrain:
+    enabled: false
+    seed: 0
+    n_steps: 600
+    hold_min: 10
+    hold_max: 40
+    D_lo: 0.03
+    D_hi: 0.22
+    noise_std: 0.01
+    lr: 0.01
+    adam_iters: 3000
+    lbfgs_iters: 300
+    window: 20
+    law_penalty: 100.0
+    weight_decay: 1.0e-06
+  P0:
+  - 0.05
+  - 0.05
+  - 0.05
