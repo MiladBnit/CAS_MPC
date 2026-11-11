@@ -11,13 +11,26 @@ states and network parameters, and they are the scenarios of a stochastic MPC wi
 satisfaction. The particles still approximate the parameter posterior.
 
 <p align="center">
+  <img src="assets/closed_loop.webp" alt="Animated closed-loop run of CAS-MPC, CAS-MPC with omega = 0, RBSVGD-MPC and RBPF-MPC on the bioreactor" width="900">
+</p>
+<p align="center"><em>
+One closed-loop run on the bioreactor (seed 11), step by step. Rows: CAS-MPC, CAS-MPC with ω = 0, RBSVGD-MPC and
+RBPF-MPC. Columns: the unmeasured biomass with its bounds, the measured product with its reference, and the learned
+growth rate. At each step, the shaded band is the forecast the controller uses for the next 10 h (95% interval of the
+particles' predictions), and each row shows its running metrics. RBSVGD-MPC's forecast is too narrow and its biomass
+leaves the bounds; CAS-MPC's covers the truth.
+</em></p>
+
+<details>
+<summary>Static version (Figure 1 of the paper)</summary>
+<p align="center">
   <img src="assets/closed_loop.png" alt="Closed-loop run of CAS-MPC, CAS-MPC with omega = 0, RBSVGD-MPC and RBPF-MPC on the bioreactor" width="900">
 </p>
 <p align="center"><em>
-One closed-loop run on the bioreactor (seed 11). Rows: CAS-MPC, CAS-MPC with ω = 0, RBSVGD-MPC and RBPF-MPC. Columns:
-the unmeasured biomass with its bounds, the measured product with its reference, and the learned growth rate. Shaded
-bands are 95% forecast intervals, thin lines are particles, and triangles mark bound violations.
+The whole run. Shaded bands are 95% one-step forecast intervals, thin lines are particles, and triangles mark bound
+violations.
 </em></p>
+</details>
 
 ## The idea
 
@@ -93,7 +106,8 @@ Open the notebooks with the `.venv` environment as the kernel:
 | [`run_bioreactor.ipynb`](notebooks/run_bioreactor.ipynb) | the bioreactor model and all parameters; one closed-loop run of every method (the figure above) | about 2 min |
 | [`montecarlo_bioreactor.ipynb`](notebooks/montecarlo_bioreactor.ipynb) | the Monte Carlo study: the table above, violation statistics, box plots | instant from the saved results; about 1.5 h with 10 processes when rerun |
 
-Both notebooks are rendered on GitHub with their outputs, so they can be read without running anything.
+Both notebooks are rendered on GitHub with their outputs, so they can be read without running anything. The animation
+is made by `python tools/make_animation.py` (about two minutes, reusing the run of `run_bioreactor.ipynb`).
 
 **Configuration.** All parameters live in [`config/bioreactor.yaml`](config/bioreactor.yaml), loaded on top of
 `config/default.yaml`. Seeds are fixed, and every result folder stores the configuration that produced it. The
@@ -106,6 +120,7 @@ config/          benchmark definition (plant, model, filters, controller, refere
 notebooks/       single run and Monte Carlo study
 results/         saved Monte Carlo results of the paper (metrics per run, configuration)
 src/carbsgd/     implementation
+tools/           make_animation.py: the animation above, from the saved run of the single-run notebook
 assets/          figures shown in this README
 ```
 
