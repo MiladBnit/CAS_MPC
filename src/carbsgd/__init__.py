@@ -1,4 +1,4 @@
-"""Control-aware Stein filtering for stochastic MPC.
+"""CAS-MPC: control-aware online learning of gray-box neural state-space models for stochastic MPC.
 
 Equations are referred to by their LaTeX labels in the paper (e.g. eq:score).
 """

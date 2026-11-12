@@ -1,4 +1,4 @@
-"""Figures of the bioreactor case study, in the style of the paper (L4DC, PMLR
+"""Figures of the bioreactor case study, in the style of the paper (PMLR
 format): the closed loop of one seed (plot_bio_paper) and the Monte Carlo over
 seeds (plot_mc_paper), and save_figure.
 
@@ -64,7 +64,7 @@ PAPER_RC = {
     "xtick.major.width": 0.6, "ytick.major.width": 0.6, "xtick.major.size": 2.5, "ytick.major.size": 2.5,
     "savefig.bbox": "tight",
 }
-TEXT_WIDTH = 6.5          # inches (PMLR / L4DC text width)
+TEXT_WIDTH = 6.5          # inches (PMLR text width)
 
 
 def _rc():

@@ -1,6 +1,6 @@
 cff-version: 1.2.0
 message: "If you use this code, please cite the paper below."
-title: "CAS-MPC: Control-Aware Stein Filtering for Stochastic MPC"
+title: "CAS-MPC: Control-Aware Online Learning of Gray-Box Neural State-Space Models for Stochastic MPC"
 type: software
 license: MIT
 repository-code: "https://github.com/MiladBnit/CAS_MPC"
@@ -15,14 +15,12 @@ authors:
     given-names: "Dario"
     affiliation: "IDSIA Dalle Molle Institute for Artificial Intelligence, SUPSI-USI"
 keywords:
-  - stochastic model predictive control
+  - stochastic MPC
   - gray-box neural models
-  - online learning
-  - Stein variational gradient descent
   - Bayesian filtering
 preferred-citation:
   type: generic
-  title: "Control-Aware Stein Filtering for Stochastic MPC with Online-Learned Gray-Box Neural Models"
+  title: "Control-Aware Online Learning of Gray-Box Neural State-Space Models for Stochastic MPC"
   authors:
     - family-names: "Banitalebi Dehkordi"
       given-names: "Milad"

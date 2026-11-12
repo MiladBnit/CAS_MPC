@@ -1,14 +1,19 @@
-# CAS-MPC: Control-Aware Stein Filtering for Stochastic MPC
+# CAS-MPC: Control-Aware Online Learning for Stochastic MPC
 
-Code for the paper **Control-Aware Stein Filtering for Stochastic MPC with Online-Learned Gray-Box Neural Models**
+Code for the paper **Control-Aware Online Learning of Gray-Box Neural State-Space Models for Stochastic MPC**
 by Milad Banitalebi Dehkordi, Manas Mejari and Dario Piga (IDSIA Dalle Molle Institute for Artificial Intelligence,
 SUPSI-USI, Lugano, Switzerland).
 
-**CAS-MPC** controls systems described by gray-box neural state-space models that are learned online. The particles
-of a Rao–Blackwellized Stein variational filter serve two purposes at once: they approximate the joint posterior of
-states and network parameters, and they are the scenarios of a stochastic MPC with chance constraints. A
-**control-aware kernel** makes the filter spread its particles where the uncertainty matters for constraint
-satisfaction. The particles still approximate the parameter posterior.
+**CAS-MPC** (control-aware Stein MPC) is a framework for learning gray-box neural state-space models online, designed
+for stochastic MPC.
+- **One set of particles serves learning and control.** A Rao–Blackwellized Stein variational filter learns the model.
+  Its particles approximate the joint posterior of states and network parameters, and they are used directly as the
+  scenarios of the SMPC's chance constraints.
+- **Where the particles sit decides how reliably the constraints hold,** because only a few particles are affordable in
+  real time. CAS-MPC therefore uses a **control-aware kernel**: it compares particles by the outputs and constraint
+  margins they predict under the SMPC inputs, rather than by their parameter values.
+- **Result:** the particles spread where uncertainty matters for the constraints, and they still approximate the
+  parameter posterior.
 
 <p align="center">
   <img src="assets/closed_loop.webp" alt="Animated closed-loop run of CAS-MPC, CAS-MPC with omega = 0, RBSVGD-MPC and RBPF-MPC on the bioreactor" width="900">
@@ -36,7 +41,7 @@ violations.
 
 At each sampling time, CAS-MPC solves three subproblems with one set of $N$ particles:
 
-1. **Learning.** RBSVGD approximates $p(x_t, \theta \mid y_{1:t})$. Each particle $\theta^{(i)}$ carries its own
+1. **Learning.** RBSVGD approximates $p(x_t, \theta_t \mid y_{1:t})$. Each particle $\theta^{(i)}_t$ carries its own
    extended Kalman filter, and the particles move by Stein variational gradient descent towards the parameter posterior.
    Prior knowledge about the network, such as the sign of a derivative of a learned rate, is imposed as constraints
    $\kappa(\theta) \le 0$.
@@ -45,16 +50,22 @@ At each sampling time, CAS-MPC solves three subproblems with one set of $N$ part
 3. **Control-aware learning.** The standard kernel compares particles by their distance in parameter space. That
    distance is a poor proxy for what the controller sees: permuting hidden units leaves the model unchanged, and many
    directions barely affect the predictions. The control-aware kernel compares particles by the outputs and constraint
-   margins $\Phi_t(\theta)$ they predict under the planned input:
+   margins $\Phi_t(\theta)$ they predict under the SMPC inputs, that is, by their simulated responses to the same input
+   sequence:
 
 $$
 k_\omega(\theta, \theta') = \exp\!\Big(-\frac{\lVert \Phi_t(\theta) - \Phi_t(\theta')\rVert^2}{b_\Phi}\Big)
   + \omega \exp\!\Big(-\frac{\lVert \theta - \theta'\rVert^2}{b_\theta}\Big).
 $$
 
-Only the kernel changes, so the SVGD descent property is kept. The parameter-space term ($\omega > 0$) ensures that the
-particles keep approximating the posterior even when the predictions do not depend on some directions of $\theta$. The
-paper also bounds the closed-loop violation of the chance constraints by a model, a posterior and a particle error term.
+The weight $\omega$ trades off the two terms: $\omega = 0$ gives the purely control-aware kernel, and a large $\omega$
+approaches the standard parameter-space kernel.
+- **Descent property.** With $\omega > 0$, every SVGD iteration still brings the particles closer to the posterior,
+  whatever the controller does. The parameter-space term keeps them approximating the posterior even in directions of
+  $\theta$ that the predictions do not depend on.
+- **Constraint bound.** The paper also bounds the closed-loop violation of the chance constraints by a model, a
+  posterior and a particle error term. The SVGD iterations reduce the posterior error, and the control-aware kernel is
+  designed to reduce the particle error.
 
 ## Results
 
@@ -162,7 +173,7 @@ If you use this code, please cite the paper. GitHub's "Cite this repository" but
 
 ```bibtex
 @misc{banitalebi2026casmpc,
-  title  = {Control-Aware Stein Filtering for Stochastic {MPC} with Online-Learned Gray-Box Neural Models},
+  title  = {Control-Aware Online Learning of Gray-Box Neural State-Space Models for Stochastic {MPC}},
   author = {Banitalebi Dehkordi, Milad and Mejari, Manas and Piga, Dario},
   year   = {2026},
   note   = {Code: https://github.com/MiladBnit/CAS_MPC}
