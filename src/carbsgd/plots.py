@@ -16,7 +16,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 
-# Colour by role (Okabe-Ito palette, colour-blind safe): the filters blue, the measurements orange,
+# Colour by role: the filters green (as in the RBSVGD paper), the measurements orange,
 # the truth black, the bounds and the violations red, the reference dark grey.
 # STYLE: one colour per method, used when ONE_FILTER_COLOR is False.
 STYLE = {
@@ -37,9 +37,9 @@ PARTICLES = dict(lw=0.45, alpha=0.55)
 MEASURED = dict(color="#FF7300", ls="none", marker="o", ms=1.25, mew=0, zorder=11)  # measurements of P: orange
 ONE_FILTER_COLOR = True    # closed-loop figure: every method in FILTER_STYLE (the row labels name them);
                            # False: each method in its STYLE colour
-FILTER_STYLE = dict(color="#0072B2", fill="#56B4E9", ls="-", lw=0.9, zorder=9, fill_zorder=5, fill_alpha=0.5)   # blue
-# Monte Carlo figure: the proposed method in the filter blue, the others neutral grey
-MC_STYLE = {"ca": dict(color="#0072B2", fill="#56B4E9", fill_alpha=0.55),
+FILTER_STYLE = dict(color="#0A8564", fill="#41AC4176", ls="-", lw=0.9, zorder=9, fill_zorder=5, fill_alpha=0.35)   # green
+# Monte Carlo figure: the proposed method in the filter green, the others neutral grey
+MC_STYLE = {"ca": dict(color="#0A8564", fill="#41AC41", fill_alpha=0.45),
             "param": dict(color="#6E6E6E", fill="#BDBDBD", fill_alpha=0.55),
             "rbpf": dict(color="#6E6E6E", fill="#BDBDBD", fill_alpha=0.55),
             "ce": dict(color="#6E6E6E", fill="#BDBDBD", fill_alpha=0.55),
